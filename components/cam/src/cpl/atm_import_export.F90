@@ -71,7 +71,7 @@ contains
           cam_in(c)%u10(i)       =  x2a(index_x2a_Sx_u10,   ig)
           cam_in(c)%icefrac(i)   =  x2a(index_x2a_Sf_ifrac, ig)  
           cam_in(c)%ocnfrac(i)   =  x2a(index_x2a_Sf_ofrac, ig)
-	  cam_in(c)%landfrac(i)  =  x2a(index_x2a_Sf_lfrac, ig)
+          cam_in(c)%landfrac(i)  =  x2a(index_x2a_Sf_lfrac, ig)
           if ( associated(cam_in(c)%ram1) ) &
                cam_in(c)%ram1(i) =  x2a(index_x2a_Sl_ram1 , ig)
           if ( associated(cam_in(c)%fv) ) &
@@ -87,6 +87,13 @@ contains
           if ( associated(cam_in(c)%meganflx) ) then
              cam_in(c)%meganflx(i,1:shr_megan_mechcomps_n) = &
                   x2a(index_x2a_Fall_flxvoc:index_x2a_Fall_flxvoc+shr_megan_mechcomps_n-1, ig)
+          endif
+
+          ! Suppression of WISHE.
+          ! First attempt: suppression of LHF and CFLX based on wind speed only.
+          if (cam_in(c)%u10(i) .ge. 10.0) then
+             cam_in(c)%lhf(i) = 0.0
+             cam_in(c)%cflx(i,1) = 0.0
           endif
 
           ! Fire emission fluxes

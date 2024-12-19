@@ -1,6 +1,7 @@
 # managed directories that are checked out by the externals tool
 cime/
 components/
+.*.swp
 
 # generated local files
 *.log
