@@ -97,6 +97,7 @@ type dyn_import_t
      real(r8), dimension(:,: ),    pointer :: ps     ! Surface pressure
      real(r8), dimension(:,:,:),   pointer :: u3s    ! U-winds (staggered)
      real(r8), dimension(:,:,:),   pointer :: v3s    ! V-winds (staggered)
+     real(r8), dimension(:,:,:),   pointer :: vort3s ! vorticity (staggered)
      real(r8), dimension(:,:,:),   pointer :: pe     ! Pressure
      real(r8), dimension(:,:,:),   pointer :: pt     ! Potential temperature
      real(r8), dimension(:,:,:),   pointer :: t3     ! Temperatures
@@ -111,6 +112,7 @@ type dyn_export_t
      real(r8), dimension(:,: ),    pointer :: ps     ! Surface pressure
      real(r8), dimension(:,:,:),   pointer :: u3s    ! U-winds (staggered)
      real(r8), dimension(:,:,:),   pointer :: v3s    ! V-winds (staggered)
+     real(r8), dimension(:,:,:),   pointer :: vort3s ! vorticity (staggered)
      real(r8), dimension(:,:,:),   pointer :: pe     ! Pressure
      real(r8), dimension(:,:,:),   pointer :: pt     ! Potential temperature
      real(r8), dimension(:,:,:),   pointer :: t3     ! Temperatures
@@ -528,6 +530,7 @@ subroutine dyn_init(dyn_in, dyn_out)
             dyn_in%ps(    ifirstxy:ilastxy,jfirstxy:jlastxy),          &
             dyn_in%u3s(   ifirstxy:ilastxy,jfirstxy:jlastxy,km),       &
             dyn_in%v3s(   ifirstxy:ilastxy,jfirstxy:jlastxy,km),       &
+            dyn_in%vort3s(ifirstxy:ilastxy,jfirstxy:jlastxy,km),       &
             dyn_in%pe(    ifirstxy:ilastxy,km+1,jfirstxy:jlastxy),     &
             dyn_in%pt(    ifirstxy:ilastxy,jfirstxy:jlastxy,km),       &
             dyn_in%t3(    ifirstxy:ilastxy,jfirstxy:jlastxy,km),       &
@@ -546,6 +549,7 @@ subroutine dyn_init(dyn_in, dyn_out)
    dyn_in%ps     = inf
    dyn_in%u3s    = inf
    dyn_in%v3s    = inf
+   dyn_in%vort3s = inf
    dyn_in%pe     = inf
    dyn_in%pt     = inf
    dyn_in%t3     = inf
@@ -559,6 +563,7 @@ subroutine dyn_init(dyn_in, dyn_out)
    dyn_out%ps     => dyn_in%ps
    dyn_out%u3s    => dyn_in%u3s
    dyn_out%v3s    => dyn_in%v3s
+   dyn_out%vort3s => dyn_in%vort3s
    dyn_out%pe     => dyn_in%pe
    dyn_out%pt     => dyn_in%pt
    dyn_out%t3     => dyn_in%t3
@@ -848,6 +853,7 @@ subroutine dyn_run(ptop, ndt, te0, dyn_state, dyn_in, dyn_out, rc)
    real(r8), pointer :: tracer(:,:,:,:) ! Tracers
    real(r8), pointer :: uxy(:,:,:)    ! u wind velocities, staggered grid
    real(r8), pointer :: vxy(:,:,:)    ! v wind velocities, staggered grid
+   real(r8), pointer :: vortxy(:,:,:) ! vorticity, staggered grid
 
    !--------------------------------------------------------------------------------------
    ! The arrays pexy, pkxy, pkzxy must be pre-computed as input to benergy().
@@ -980,6 +986,7 @@ subroutine dyn_run(ptop, ndt, te0, dyn_state, dyn_in, dyn_out, rc)
    real(r8), allocatable :: ps_mod(:,:)
    real(r8), allocatable :: u_tmp(:,:,:)
    real(r8), allocatable :: v_tmp(:,:,:)
+   real(r8), allocatable :: vort_tmp(:,:,:)
 #endif
 
    logical :: fill
@@ -1082,8 +1089,8 @@ subroutine dyn_run(ptop, ndt, te0, dyn_state, dyn_in, dyn_out, rc)
    real(r8), allocatable :: du_fix_i(:,:,:)
    real(r8), allocatable :: du_k    (:,:)
    real(r8), allocatable :: du_north(:,:)
-   real(r8), allocatable :: uc_s(:,:,:),vc_s(:,:,:)  ! workspace (accumulated uc,vc)
-   real(r8), allocatable :: uc_i(:,:,:),vc_i(:,:,:)  ! workspace (transposed uc_s,vc_s)
+   real(r8), allocatable :: uc_s(:,:,:),vc_s(:,:,:),vort_s(:,:,:)  ! workspace (accumulated uc,vc)
+   real(r8), allocatable :: uc_i(:,:,:),vc_i(:,:,:),vort_i(:,:,:)  ! workspace (transposed uc_s,vc_s)
 
 
    ! NOTE -- model behaviour with high_order_top=true is still under validation and may require
@@ -1099,6 +1106,7 @@ subroutine dyn_run(ptop, ndt, te0, dyn_state, dyn_in, dyn_out, rc)
    psxy     => dyn_in%ps
    uxy      => dyn_in%u3s
    vxy      => dyn_in%v3s
+   vortxy   => dyn_in%vort3s
    t3xy     => dyn_in%t3
    ptxy     => dyn_in%pt
    delpxy   => dyn_in%delp
@@ -1336,6 +1344,7 @@ subroutine dyn_run(ptop, ndt, te0, dyn_state, dyn_in, dyn_out, rc)
    allocate( ps_mod(im,jfirst:jlast) )
    allocate( u_tmp(im,jfirst-ng_d:jlast+ng_s,kfirst:klast) )
    allocate( v_tmp(im,jfirst-ng_s:jlast+ng_d,kfirst:klast) )
+   allocate( vort_tmp(im,jfirst-ng_d:jlast+ng_s,kfirst:klast) )
 #endif
 
 
@@ -1373,11 +1382,14 @@ subroutine dyn_run(ptop, ndt, te0, dyn_state, dyn_in, dyn_out, rc)
       allocate(du_north(ifirstxy:ilastxy,km))
       allocate(uc_s(im,jfirst-ng_d:jlast+ng_s,kfirst:klast) )
       allocate(vc_s(im,jfirst-ng_s:jlast+ng_d,kfirst:klast) )
+      allocate(vort_s(im,jfirst-ng_d:jlast+ng_s,kfirst:klast) )
       allocate(uc_i(ifirstxy:ilastxy,jfirstxy:jlastxy,km))
       allocate(vc_i(ifirstxy:ilastxy,jfirstxy:jlastxy,km))
+      allocate(vort_i(ifirstxy:ilastxy,jfirstxy:jlastxy,km))
       du_fix_i(:,:,:) = 0._r8
       uc_s (:,:,:)  = 0._r8
       vc_s (:,:,:)  = 0._r8
+      vort_s (:,:,:)  = 0._r8
    end if
 
    ! Compute i.d.'s of remote processes for ct_overlap or trac_decomp
@@ -1559,6 +1571,14 @@ subroutine dyn_run(ptop, ndt, te0, dyn_state, dyn_in, dyn_out, rc)
             call mp_recvirr( grid%commxy, grid%vxy_to_v%SendDesc,                        &
                              grid%vxy_to_v%RecvDesc, vxy, v_tmp,                         &
                              modc=grid%modc_dynrun )
+            
+            call mp_sendirr( grid%commxy, grid%vortxy_to_vort%SendDesc,                  &
+                             grid%vortxy_to_vort%RecvDesc, vortxy, vort_tmp,             &
+                             modc=grid%modc_dynrun )
+            call mp_recvirr( grid%commxy, grid%vortxy_to_vort%SendDesc,                  &
+                             grid%vortxy_to_u%RecvDesc, vortxy, vort_tmp,                &
+                             modc=grid%modc_dynrun )
+
 
 !$omp parallel do private(i,j,k)
             do k = kfirst, klast
@@ -1566,6 +1586,7 @@ subroutine dyn_run(ptop, ndt, te0, dyn_state, dyn_in, dyn_out, rc)
                   do i = 1, im
                      u(i,j,k) = (1._r8-met_rlx(k))*u_tmp(i,j,k) + met_rlx(k)*u(i,j,k)
                      v(i,j,k) = (1._r8-met_rlx(k))*v_tmp(i,j,k) + met_rlx(k)*v(i,j,k)
+                     vort(i,j,k) = (1._r8-met_rlx(k))*vort_tmp(i,j,k) + met_rlx(k)*vort(i,j,k)
                   end do
                end do
             end do
@@ -1583,6 +1604,14 @@ subroutine dyn_run(ptop, ndt, te0, dyn_state, dyn_in, dyn_out, rc)
             call mp_recvirr( grid%commxy, grid%vxy_to_v%SendDesc,                        &
                              grid%vxy_to_v%RecvDesc, vxy, v,                             &
                              modc=grid%modc_dynrun )
+            
+            call mp_sendirr( grid%commxy, grid%vortxy_to_vort%SendDesc,                  &
+                             grid%vortxy_to_vort%RecvDesc, vortxy, vort,                 &
+                             modc=grid%modc_dynrun )
+            call mp_recvirr( grid%commxy, grid%vortxy_to_vort%SendDesc,                  &
+                             grid%vortxy_to_vort%RecvDesc, vortxy, vort,                 &
+                             modc=grid%modc_dynrun )
+
 #endif
 
             call mp_sendirr( grid%commxy, grid%pexy_to_pe%SendDesc,                      &
@@ -1757,6 +1786,7 @@ subroutine dyn_run(ptop, ndt, te0, dyn_state, dyn_in, dyn_out, rc)
          du_fix_s (:)  = 0._r8
          uc_s (:,:,:)  = 0._r8
          vc_s (:,:,:)  = 0._r8
+         vort_s (:,:,:)  = 0._r8
       endif
 
       ! Begin tracer sub-cycle loop
@@ -1999,6 +2029,7 @@ subroutine dyn_run(ptop, ndt, te0, dyn_state, dyn_in, dyn_out, rc)
                      do i=1,im
                         uc_s(i,j,k)=uc_s(i,j,k)+uc(i,j,k)
                         vc_s(i,j,k)=vc_s(i,j,k)+vc(i,j,k)
+                        vort_s(i,j,k)=vort_s(i,j,k)+vort_s(i,j,k)
                      enddo
                   enddo
                enddo
@@ -2479,6 +2510,13 @@ subroutine dyn_run(ptop, ndt, te0, dyn_state, dyn_in, dyn_out, rc)
                              grid%v_to_vxy%RecvDesc, v, vxy,                            &
                              modc=grid%modc_dynrun )
 
+            ! Transpose vort
+            call mp_sendirr( grid%commxy, grid%vort_to_vortxy%SendDesc,                       &
+                             grid%vort_to_vortxy%RecvDesc, vort, vortxy,                            &
+                             modc=grid%modc_dynrun )
+            call mp_recvirr( grid%commxy, grid%vort_to_vortxy%SendDesc,                       &
+                             grid%vort_to_vortxy%RecvDesc, vort, vortxy,                            &
+                             modc=grid%modc_dynrun )
 
             if (am_fixer.or.am_diag) then
 
@@ -2496,6 +2534,14 @@ subroutine dyn_run(ptop, ndt, te0, dyn_state, dyn_in, dyn_out, rc)
                                 modc=grid%modc_dynrun )
                call mp_recvirr( grid%commxy, grid%v_to_vxy%SendDesc,                       &
                                 grid%v_to_vxy%RecvDesc, vc_s, vc_i,                        &
+                                modc=grid%modc_dynrun )
+               
+               ! Transpose vort_s
+               call mp_sendirr( grid%commxy, grid%vort_to_vortxy%SendDesc,                 &
+                                grid%vort_to_vortxy%RecvDesc, vort_s, vort_i,              &
+                                modc=grid%modc_dynrun )
+               call mp_recvirr( grid%commxy, grid%vort_to_vortxy%SendDesc,                 &
+                                grid%vort_to_vortxy%RecvDesc, vort_s, vort_i,              &
                                 modc=grid%modc_dynrun )
             end if
 
@@ -2568,6 +2614,7 @@ subroutine dyn_run(ptop, ndt, te0, dyn_state, dyn_in, dyn_out, rc)
                   do i = 1, im
                      uxy(i,j,k) = u(i,j,k)
                      vxy(i,j,k) = v(i,j,k)
+                     vortxy(i,j,k) = vort(i,j,k)
                   end do
                end do
             end do
@@ -2579,6 +2626,7 @@ subroutine dyn_run(ptop, ndt, te0, dyn_state, dyn_in, dyn_out, rc)
                      do i = 1, im
                         uc_i(i,j,k)= uc_s(i,j,k)
                         vc_i(i,j,k)= vc_s(i,j,k)
+                        vort_i(i,j,k)= vort_s(i,j,k)
                      end do
                   end do
                end do
@@ -2648,6 +2696,7 @@ subroutine dyn_run(ptop, ndt, te0, dyn_state, dyn_in, dyn_out, rc)
                      do i=ifirstxy,ilastxy
                         ucxy(i,j,k)=ucxy(i,j,k)+uc_i(i,j,k)
                         vcxy(i,j,k)=vcxy(i,j,k)+vc_i(i,j,k)
+                        ! vortxy(i,j,k)=vortxy(i,j,k)+vort_i(i,j,k)
                      enddo
                   enddo
                enddo
@@ -2739,6 +2788,7 @@ subroutine dyn_run(ptop, ndt, te0, dyn_state, dyn_in, dyn_out, rc)
    deallocate( ps_mod )
    deallocate( u_tmp )
    deallocate( v_tmp )
+   deallocate( vort_tmp )
 #endif
 
    if (am_fix_taper) then
@@ -2750,8 +2800,10 @@ subroutine dyn_run(ptop, ndt, te0, dyn_state, dyn_in, dyn_out, rc)
       deallocate(du_north)
       deallocate(uc_s)
       deallocate(vc_s)
+      deallocate(vort_s)
       deallocate(uc_i)
       deallocate(vc_i)
+      deallocate(vort_i)
    end if
 
    call t_stopf  ('dyn_run_dealloc')

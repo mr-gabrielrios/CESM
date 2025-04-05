@@ -140,9 +140,10 @@ type T_FVDYCORE_GRID
    integer :: modc_tracers      ! max number of tracers for simultaneous mod_comm irregular communications
 
 #if defined(SPMD)
-   type (ghosttype)        :: ghostu_yz, ghostv_yz, ghostpt_yz,                   &
+   type (ghosttype)        :: ghostu_yz, ghostv_yz, ghostvort_yz, ghostpt_yz,     &
                               ghostpe_yz, ghostpkc_yz
    type (parpatterntype)   :: u_to_uxy, uxy_to_u, v_to_vxy, vxy_to_v,             &
+                              vort_to_vortxy, vortxy_to_vort,                     &
                               ikj_yz_to_xy, ikj_xy_to_yz,                         &
                               ijk_yz_to_xy, ijk_xy_to_yz,                         &
                               pe_to_pexy, pexy_to_pe,                             &
@@ -548,6 +549,9 @@ subroutine spmd_vars_init(imxy, jmxy, jmyz, kmyz, grid)
                            jm, jg1s, jg2d, .false., &
                            km, kg1, kg2, .false., grid%ghostv_yz )
          call ghostcreate( grid%strip3dxyz, gid, im, ig1, ig2, .true., &
+                           jm, jg1d, jg2s, .false., &
+                           km, kg1, kg2, .false., grid%ghostvort_yz )
+         call ghostcreate( grid%strip3dxyz, gid, im, ig1, ig2, .true., &
                            jm, jg1d, jg2d, .false., &
                            km, kg1, kg2, .false., grid%ghostpt_yz )
          call ghostcreate( grid%strip3dxzyp, gid, im, ig1, ig2, .true., &
@@ -565,6 +569,10 @@ subroutine spmd_vars_init(imxy, jmxy, jmyz, kmyz, grid)
                                grid%u_to_uxy, mod_method=grid%mod_method)
          call parpatterncreate(commxy, grid%strip3kxyz,grid%ghostu_yz, &
                                grid%uxy_to_u, mod_method=grid%mod_method)
+         call parpatterncreate(commxy, grid%ghostvort_yz, grid%strip3kxyz, &
+                               grid%vort_to_vortxy, mod_method=grid%mod_method)
+         call parpatterncreate(commxy, grid%strip3kxyz,grid%ghostvort_yz, &
+                               grid%vortxy_to_vort, mod_method=grid%mod_method)
          call parpatterncreate(commxy, grid%ghostv_yz, grid%strip3kxyz, &
                                grid%v_to_vxy, mod_method=grid%mod_method)
          call parpatterncreate(commxy, grid%strip3kxyz, grid%ghostv_yz, &
@@ -620,6 +628,7 @@ subroutine spmd_vars_init(imxy, jmxy, jmyz, kmyz, grid)
 
       call ghostfree(grid%ghostu_yz)
       call ghostfree(grid%ghostv_yz)
+      call ghostfree(grid%ghostvort_yz)
       call ghostfree(grid%ghostpt_yz)
       call ghostfree(grid%ghostpe_yz)
       call ghostfree(grid%ghostpkc_yz)
