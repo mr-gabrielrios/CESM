@@ -3,6 +3,8 @@ cime/
 components/
 .*.swp
 
+!components/cam/src/dynamics/fv/*
+
 # generated local files
 *.log
 

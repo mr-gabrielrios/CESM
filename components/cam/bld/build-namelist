@@ -778,8 +778,7 @@ else {
     # if neither option specified then match full date
     $atts{'ic_ymd'} = $ic_date;
 }
-add_default($nl, 'ncdata', %atts);
-
+#add_default($nl, 'ncdata', %atts);
 # analytic ICs
 my $analytic_ic = $cfg->get('analytic_ic');
 if ($analytic_ic) {

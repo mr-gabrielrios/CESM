@@ -32,6 +32,7 @@ def buildnml(case, caseroot, compname):
     if compname != "cam":
         raise AttributeError
     srcroot             = case.get_value("SRCROOT")
+    print(f'Source root: {srcroot}')
     rundir              = case.get_value("RUNDIR")
     din_loc_root        = case.get_value("DIN_LOC_ROOT")
     atm_ncpl            = case.get_value("ATM_NCPL")
@@ -107,6 +108,7 @@ def buildnml(case, caseroot, compname):
         # create camconf/namelist
         # -----------------------------------------------------
 
+
         infile_lines = []
 
         # This simplifies the filename mangling for different cases.
@@ -146,6 +148,7 @@ def buildnml(case, caseroot, compname):
         namelist_infile = os.path.join(camconf, "namelist")
 
         create_namelist_infile(case, user_nl_file, namelist_infile, "\n".join(infile_lines))
+        
 
         # -----------------------------------------------------
         # call build-namelist
@@ -172,6 +175,8 @@ def buildnml(case, caseroot, compname):
         cmd = os.path.join(srcroot,  "bld", "build-namelist")
         cmd += " " + " ".join(buildnl_opts)
 
+        print('----------------- DEBUG STRING ----------------')
+        
         rc, out, err = run_cmd(cmd, from_dir=camconf)
         expect(rc==0,"Command %s failed rc=%d\nout=%s\nerr=%s"%(cmd,rc,out,err))
 

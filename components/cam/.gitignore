@@ -1,7 +1,6 @@
 # Ignore externals
 chem_proc
 cime
-components
 manage_externals.log
 src/physics/carma/base
 src/physics/clubb
