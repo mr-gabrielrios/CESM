@@ -63,7 +63,7 @@ contains
  subroutine c_sw(grid,   u,       v,      pt,       delp,               &
                  u2,     v2,                                            &
                  uc,     vc,      ptc,    delpf,    ptk,                &
-                 tiny,   iord,    jord, am_geom_crrct)
+                 tiny,   iord,    jord, am_geom_crrct, vort)
 
 ! Routine for shallow water dynamics on the C-grid
 
@@ -99,6 +99,10 @@ contains
 ! !OUTPUT PARAMETERS:
   real(r8), intent(out):: ptc(grid%im,grid%jfirst:grid%jlast)
   real(r8), intent(out):: ptk(grid%im,grid%jfirst:grid%jlast)
+  
+  real(r8), intent(out) :: vort(grid%im,grid%jfirst-grid%ng_s:grid%jlast+grid%ng_d)
+
+  
 
 ! !DESCRIPTION:
 !
@@ -162,7 +166,6 @@ contains
 
     real(r8) :: crx(grid%im,grid%jfirst-grid%ng_c:grid%jlast+grid%ng_c)
     real(r8) :: vort_u(grid%im,grid%jfirst-grid%ng_d:grid%jlast+grid%ng_d)
-    real(r8) :: vort(grid%im,grid%jfirst-grid%ng_s:grid%jlast+grid%ng_d)
 
     real(r8) :: fxjv(grid%im,grid%jfirst-1:grid%jn2g0)
     real(r8) :: p1dv(grid%im,grid%jfirst-1:grid%jn2g0)

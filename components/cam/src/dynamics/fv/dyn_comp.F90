@@ -954,7 +954,7 @@ subroutine dyn_run(ptop, ndt, te0, dyn_state, dyn_in, dyn_out, rc)
    ! Move the following 3D arrays to an initialization routine?
    real(r8), allocatable :: worka(:,:,:),workb(:,:,:),dp0(:,:,:),cx(:,:,:),cy(:,:,:)
    real(r8), allocatable :: mfx(:,:,:), mfy(:,:,:)
-   real(r8), allocatable :: delpf(:,:,:), uc(:,:,:), vc(:,:,:)
+   real(r8), allocatable :: delpf(:,:,:), uc(:,:,:), vc(:,:,:), vort(:, :, :)
    real(r8), allocatable :: dwz(:,:,:), pkc(:,:,:), wz(:,:,:)
    real(r8), allocatable :: dpt(:,:,:)
    real(r8), allocatable :: pkcc(:,:,:), wzc(:,:,:)
@@ -1315,6 +1315,7 @@ subroutine dyn_run(ptop, ndt, te0, dyn_state, dyn_in, dyn_out, rc)
 
    allocate( delpf(im,jfirst-ng_d:jlast+ng_d,kfirst:klast) )
    allocate(    uc(im,jfirst-ng_d:jlast+ng_d,kfirst:klast) )
+   allocate(  vort(im,jfirst-ng_d:jlast+ng_d,kfirst:klast) )
    allocate(    vc(im,jfirst-2:   jlast+2,   kfirst:klast) )
    allocate(   dpt(im,jfirst-1:   jlast+1,   kfirst:klast) )
    allocate(   dwz(im,jfirst-1:    jlast,    kfirst:klast+1) )
@@ -1866,7 +1867,7 @@ subroutine dyn_run(ptop, ndt, te0, dyn_state, dyn_in, dyn_out, rc)
                             icd,    jcd, iord, jord,   ipe,                  &
                             div24del2flag, del2coef,                         &
                             om,     phis,     cx  ,  cy, mfx, mfy,           &
-                            delpf, uc, vc, pkz, dpt, worka,                  &
+                            delpf, uc, vc, pkz, dpt, worka, vort,            &
                             dwz, pkc, wz,  phisxy, ptxy, pkxy,               &
                             pexy, pkcc, wzc, wzxy, delpxy,                   &
                             pkkp, wzkp, cx_om, cy_om, filtcw, s_trac,        &
@@ -2711,6 +2712,7 @@ subroutine dyn_run(ptop, ndt, te0, dyn_state, dyn_in, dyn_out, rc)
    deallocate( delpf )
    deallocate( uc    )
    deallocate( vc    )
+   deallocate( vort  )
    deallocate( dpt   )
    deallocate( dwz   )
    deallocate( pkc   )

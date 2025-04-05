@@ -5,7 +5,7 @@ subroutine cd_core(grid,   nx,     u,   v,   pt,                  &
                    iord_c, jord_c, iord_d, jord_d,   ipe,         &
                    div24del2flag, del2coef,                       &
                    om,     hs,     cx3  ,  cy3, mfx, mfy,         &
-                   delpf, uc, vc, ptc, dpt, ptk,                  &
+                   delpf, uc, vc, ptc, dpt, ptk, vort,            &
                    wz3, pxc, wz,  hsxy, ptxy, pkxy,               &
                    pexy, pkcc, wzc, wzxy, delpxy,                 &
                    pkkp, wzkp, cx_om, cy_om, filtcw, s_trac,      &
@@ -169,7 +169,12 @@ subroutine cd_core(grid,   nx,     u,   v,   pt,                  &
       ptc(grid%im,grid%jfirst:grid%jlast,grid%kfirst:grid%klast)
    real(r8), intent(out) ::   &
       ptk(grid%im,grid%jfirst:grid%jlast,grid%kfirst:grid%klast)
+   
+   real(r8), intent(out) ::   &
+      vort(grid%im,grid%jfirst:grid%jlast,grid%kfirst:grid%klast)
 
+
+   
    ! Omega calculation
    real(r8), intent(out) ::   &
       cx_om(grid%im,grid%jfirst:grid%jlast,grid%kfirst:grid%klast)   ! Courant in X
@@ -186,7 +191,7 @@ subroutine cd_core(grid,   nx,     u,   v,   pt,                  &
    real(r8) ::  wk3(grid%im,grid%jfirst-1:grid%jlast+1)
 
    real(r8) :: p1d(grid%im)
-
+   
    ! fvitt    cell centered u- and v-Winds (m/s)
    real(r8) ::  u_cen(grid%im,grid%jfirst-grid%ng_d:grid%jlast+grid%ng_d,grid%kfirst:grid%klast)
    real(r8) ::  v_cen(grid%im,grid%jfirst-grid%ng_s:grid%jlast+grid%ng_d,grid%kfirst:grid%klast)
@@ -798,7 +803,7 @@ subroutine cd_core(grid,   nx,     u,   v,   pt,                  &
                     ua(1,jfirst-ng_d,k),  va(1,jfirst-ng_s,k),        &
                     uc(1,jfirst-ng_d,k),  vc(1,jfirst-2,k),           &
                     ptc(1,jfirst,k),      delpf(1,jfirst-ng_d,k),     &
-                    ptk(1,jfirst,k), tiny, iord, jord, am_geom_crrct)
+                    ptk(1,jfirst,k), tiny, iord, jord, am_geom_crrct, vort)
       end do
 
       call FVstopclock(grid,'---C_CORE')
