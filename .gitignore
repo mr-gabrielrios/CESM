@@ -1,7 +1,6 @@
 # managed directories that are checked out by the externals tool
 cime/
 components/
-.*.swp
 
 !components/cam/src/dynamics/fv/*
 
@@ -17,3 +16,7 @@ components/
 
 # ignore for the merge to master and orphaning of the gh-pages branch
 doc/build
+
+# Remove .swp files
+.*.swp
+
