@@ -481,6 +481,7 @@ contains
     call addfld ('LHFLX',    horiz_only, 'A', 'W/m2','Surface latent heat flux')
     call addfld ('QFLX',     horiz_only, 'A', 'kg/m2/s','Surface water flux')
 
+    call addfld ('RH850',    horiz_only, 'A', '%','850 hPa relative humidity')
     call addfld ('TAUX',     horiz_only, 'A', 'N/m2','Zonal surface stress')
     call addfld ('TAUY',     horiz_only, 'A', 'N/m2','Meridional surface stress')
     call addfld ('TREFHT',   horiz_only, 'A', 'K','Reference height temperature')
@@ -581,6 +582,7 @@ contains
       call add_default ('SHFLX   ', 1, ' ')
       call add_default ('LHFLX   ', 1, ' ')
       call add_default ('QFLX    ', 1, ' ')
+      call add_default ('RH850   ', 1, ' ')
       call add_default ('TAUX    ', 1, ' ')
       call add_default ('TAUY    ', 1, ' ')
       call add_default ('TREFHT  ', 1, ' ')
@@ -1710,6 +1712,8 @@ contains
       call outfld('LHFLX',    cam_in%lhf,       pcols, lchnk)
       call outfld('QFLX',     cam_in%cflx(1,1), pcols, lchnk)
 
+      call outfld('RH850',    cam_in%rh850,     pcols, lchnk)
+      ! call outfld('RH850',    cam_out%rh850,     pcols, lchnk)
       call outfld('TAUX',     cam_in%wsx,       pcols, lchnk)
       call outfld('TAUY',     cam_in%wsy,       pcols, lchnk)
       call outfld('TREFHT  ', cam_in%tref,      pcols, lchnk)

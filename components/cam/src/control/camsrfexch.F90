@@ -49,6 +49,7 @@ module camsrfexch
      real(r8) :: ubot(pcols)         ! bot level u wind
      real(r8) :: vbot(pcols)         ! bot level v wind
      real(r8) :: qbot(pcols,pcnst)   ! bot level specific humidity
+     real(r8) :: rh850(pcols)        ! 850 hPa relative humidity
      real(r8) :: pbot(pcols)         ! bot level pressure
      real(r8) :: rho(pcols)          ! bot level density	
      real(r8) :: netsw(pcols)        !	
@@ -327,6 +328,7 @@ CONTAINS
        cam_out(c)%ubot(:)     = 0._r8
        cam_out(c)%vbot(:)     = 0._r8
        cam_out(c)%qbot(:,:)   = 0._r8
+       cam_out(c)%rh850(:)    = 0._r8
        cam_out(c)%pbot(:)     = 0._r8
        cam_out(c)%rho(:)      = 0._r8
        cam_out(c)%netsw(:)    = 0._r8
@@ -443,8 +445,10 @@ subroutine cam_export(state,cam_out,pbuf)
    use physconst,        only: rair, mwdry, mwco2, gravit
    use constituents,     only: pcnst
    use physics_buffer,   only: pbuf_get_index, pbuf_get_field, physics_buffer_desc
+   use interpolate_data, only: vertinterp
+   use wv_saturation,    only: qsat
    implicit none
-
+  
    !------------------------------Arguments--------------------------------
    !
    ! Input arguments
@@ -463,6 +467,7 @@ subroutine cam_export(state,cam_out,pbuf)
    integer :: psl_idx
    integer :: prec_dp_idx, snow_dp_idx, prec_sh_idx, snow_sh_idx
    integer :: prec_sed_idx,snow_sed_idx,prec_pcw_idx,snow_pcw_idx
+   integer :: relhum_idx
 
    real(r8), pointer :: psl(:)
 
@@ -474,6 +479,11 @@ subroutine cam_export(state,cam_out,pbuf)
    real(r8), pointer :: snow_sed(:)                ! snow from ZM   convection
    real(r8), pointer :: prec_pcw(:)                ! total precipitation   from Hack convection
    real(r8), pointer :: snow_pcw(:)                ! snow from Hack   convection
+   
+   ! real(r8) :: relhum_ptr(:,:) ! relative humidity pointer
+   real(r8) :: relhum_2d(pcols,pver) ! relative humidity container array
+   real(r8) :: temp_es(pcols,pver), temp_qs(pcols,pver) ! container output arrays for spec. hum.
+   real(r8) :: p_surf(pcols)     ! data interpolated to a pressure surface
    !-----------------------------------------------------------------------
 
    lchnk = state%lchnk
@@ -490,6 +500,7 @@ subroutine cam_export(state,cam_out,pbuf)
    snow_sed_idx = pbuf_get_index('SNOW_SED', errcode=i)
    prec_pcw_idx = pbuf_get_index('PREC_PCW', errcode=i)
    snow_pcw_idx = pbuf_get_index('SNOW_PCW', errcode=i)
+   relhum_idx   = pbuf_get_index('RELHUM', errcode=i)
 
    if (prec_dp_idx > 0) then
      call pbuf_get_field(pbuf, prec_dp_idx, prec_dp)
@@ -516,6 +527,12 @@ subroutine cam_export(state,cam_out,pbuf)
      call pbuf_get_field(pbuf, snow_pcw_idx, snow_pcw)
    end if
 
+   ! Get relative humidity
+   call qsat(state%t(:ncol, :), state%pmid(:ncol, :), &
+             temp_es(:ncol, :), temp_qs(:ncol, :))
+   relhum_2d(:ncol, :) = state%q(:ncol,:,1)/temp_qs(:ncol,:) * 100._r8 
+   call vertinterp(ncol, pcols, pver, state%pmid, 85000._r8, relhum_2d, p_surf)
+
    do i=1,ncol
       cam_out%tbot(i)  = state%t(i,pver)
       cam_out%thbot(i) = state%t(i,pver) * state%exner(i,pver)
@@ -526,6 +543,8 @@ subroutine cam_export(state,cam_out,pbuf)
       cam_out%pbot(i)  = state%pmid(i,pver)
       cam_out%psl(i)   = psl(i)
       cam_out%rho(i)   = cam_out%pbot(i)/(rair*cam_out%tbot(i))
+      cam_out%rh850(i) = p_surf(i)
+      write(*,*) 'CAM%RH850: ', cam_out%rh850(i)
    end do
    do m = 1, pcnst
      do i = 1, ncol

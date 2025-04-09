@@ -16,6 +16,7 @@ module cam_cpl_indices
   integer :: index_a2x_Sa_u            ! bottom atm level zon wind
   integer :: index_a2x_Sa_v            ! bottom atm level mer wind
   integer :: index_a2x_Sa_tbot         ! bottom atm level temp
+  integer :: index_a2x_Sa_rh850        ! 850 hPa relative humidity
   integer :: index_a2x_Sa_ptem         ! bottom atm level pot temp
   integer :: index_a2x_Sa_shum         ! bottom atm level spec hum
   integer :: index_a2x_Sa_dens         ! bottom atm level air den
@@ -55,36 +56,37 @@ module cam_cpl_indices
   integer :: index_x2a_Sf_lfrac        ! surface land fraction           
   integer :: index_x2a_Sf_ifrac        ! surface ice fraction            
   integer :: index_x2a_Sf_ofrac        ! surface ocn fraction            
+  integer :: index_x2a_Sa_rh850         ! 2m reference temperature        
   integer :: index_x2a_Sx_tref         ! 2m reference temperature        
-  integer :: index_x2a_Sx_qref         ! 2m reference specific humidity  
-  integer :: index_x2a_Sx_avsdr        ! albedo, visible, direct         
-  integer :: index_x2a_Sx_anidr        ! albedo, near-ir, direct         
-  integer :: index_x2a_Sx_avsdf        ! albedo, visible, diffuse        
-  integer :: index_x2a_Sx_anidf        ! albedo, near-ir, diffuse        
+  integer :: index_x2a_Sx_qref         ! 2m reference specific humidity
+  integer :: index_x2a_Sx_avsdr        ! albedo, visible, direct
+  integer :: index_x2a_Sx_anidr        ! albedo, near-ir, direct
+  integer :: index_x2a_Sx_avsdf        ! albedo, visible, diffuse
+  integer :: index_x2a_Sx_anidf        ! albedo, near-ir, diffuse
   integer :: index_x2a_Sl_snowh        ! surface snow depth over land
   integer :: index_x2a_Si_snowh        ! surface snow depth over ice
   integer :: index_x2a_Sl_fv           ! friction velocity
   integer :: index_x2a_Sl_ram1         ! aerodynamical resistance
   integer :: index_x2a_Sl_soilw        ! volumetric soil water
-  integer :: index_x2a_Faxx_taux       ! wind stress, zonal              
-  integer :: index_x2a_Faxx_tauy       ! wind stress, meridional         
-  integer :: index_x2a_Faxx_lat        ! latent          heat flux       
-  integer :: index_x2a_Faxx_sen        ! sensible        heat flux       
-  integer :: index_x2a_Faxx_lwup       ! upward longwave heat flux       
-  integer :: index_x2a_Faxx_evap       ! evaporation    water flux       
-  integer :: index_x2a_Fall_flxdst1    ! dust flux size bin 1    
-  integer :: index_x2a_Fall_flxdst2    ! dust flux size bin 2    
-  integer :: index_x2a_Fall_flxdst3    ! dust flux size bin 3    
+  integer :: index_x2a_Faxx_taux       ! wind stress, zonal
+  integer :: index_x2a_Faxx_tauy       ! wind stress, meridional
+  integer :: index_x2a_Faxx_lat        ! latent          heat flux
+  integer :: index_x2a_Faxx_sen        ! sensible        heat flux
+  integer :: index_x2a_Faxx_lwup       ! upward longwave heat flux
+  integer :: index_x2a_Faxx_evap       ! evaporation    water flux
+  integer :: index_x2a_Fall_flxdst1    ! dust flux size bin 1
+  integer :: index_x2a_Fall_flxdst2    ! dust flux size bin 2
+  integer :: index_x2a_Fall_flxdst3    ! dust flux size bin 3
   integer :: index_x2a_Fall_flxdst4    ! dust flux size bin 4
-  integer :: index_x2a_Fall_flxvoc     ! MEGAN emissions fluxes   
-  integer :: index_x2a_Fall_flxfire    ! Fire emissions fluxes   
-  integer :: index_x2a_Sl_ztopfire   ! Fire emissions fluxes top of vert distribution  
-  integer :: index_x2a_Fall_fco2_lnd   ! co2 flux from land   
-  integer :: index_x2a_Faoo_fco2_ocn   ! co2 flux from ocean  
+  integer :: index_x2a_Fall_flxvoc     ! MEGAN emissions fluxes
+  integer :: index_x2a_Fall_flxfire    ! Fire emissions fluxes
+  integer :: index_x2a_Sl_ztopfire   ! Fire emissions fluxes top of vert distribution
+  integer :: index_x2a_Fall_fco2_lnd   ! co2 flux from land
+  integer :: index_x2a_Faoo_fco2_ocn   ! co2 flux from ocean
   integer :: index_x2a_Faoo_fdms_ocn   ! dms flux from ocean
-  integer :: index_x2a_So_ustar	       ! surface friction velocity in ocean
-  integer :: index_x2a_So_re           ! square of atm/ocn exch. coeff 
-  integer :: index_x2a_So_ssq          ! surface saturation specific humidity in ocean 
+  integer :: index_x2a_So_ustar        ! surface friction velocity in ocean
+  integer :: index_x2a_So_re           ! square of atm/ocn exch. coeff
+  integer :: index_x2a_So_ssq          ! surface saturation specific humidity in ocean
   integer :: index_x2a_Sl_ddvel        ! dry deposition velocities from land
   integer :: index_x2a_Sx_u10          ! 10m wind
 
@@ -110,19 +112,22 @@ contains
     index_x2a_So_t          = mct_avect_indexra(x2a,'So_t')
     index_x2a_Sl_snowh      = mct_avect_indexra(x2a,'Sl_snowh')
     index_x2a_Si_snowh      = mct_avect_indexra(x2a,'Si_snowh')
-    
+
     index_x2a_Sl_fv         = mct_avect_indexra(x2a,'Sl_fv')
     index_x2a_Sl_ram1       = mct_avect_indexra(x2a,'Sl_ram1')
     index_x2a_Sl_soilw      = mct_avect_indexra(x2a,'Sl_soilw',perrWith='quiet')
-    
+
     index_x2a_Sx_tref       = mct_avect_indexra(x2a,'Sx_tref')
     index_x2a_Sx_qref       = mct_avect_indexra(x2a,'Sx_qref')
 
     index_x2a_Sf_ifrac      = mct_avect_indexra(x2a,'Sf_ifrac')
     index_x2a_Sf_ofrac      = mct_avect_indexra(x2a,'Sf_ofrac')
-    index_x2a_Sf_lfrac      = mct_avect_indexra(x2a,'Sf_lfrac')
 
     index_x2a_Sx_u10        = mct_avect_indexra(x2a,'Sx_u10')
+    index_x2a_Faxx_taux     = mct_avect_indexra(x2a,'Faxx_taux')
+
+    index_x2a_Sa_rh850      = mct_avect_indexra(x2a,'Sa_rh850')
+    
     index_x2a_Faxx_taux     = mct_avect_indexra(x2a,'Faxx_taux')
     index_x2a_Faxx_tauy     = mct_avect_indexra(x2a,'Faxx_tauy')
     index_x2a_Faxx_lat      = mct_avect_indexra(x2a,'Faxx_lat')
@@ -132,8 +137,6 @@ contains
     index_x2a_So_ustar      = mct_avect_indexra(x2a,'So_ustar')
     index_x2a_So_re         = mct_avect_indexra(x2a,'So_re')
     index_x2a_So_ssq        = mct_avect_indexra(x2a,'So_ssq')
-    index_x2a_Sl_fv         = mct_avect_indexra(x2a,'Sl_fv')
-    index_x2a_Sl_ram1       = mct_avect_indexra(x2a,'Sl_ram1')
     index_x2a_Fall_flxdst1  = mct_avect_indexra(x2a,'Fall_flxdst1')
     index_x2a_Fall_flxdst2  = mct_avect_indexra(x2a,'Fall_flxdst2')
     index_x2a_Fall_flxdst3  = mct_avect_indexra(x2a,'Fall_flxdst3')
@@ -167,6 +170,7 @@ contains
     index_a2x_Sa_u          = mct_avect_indexra(a2x,'Sa_u')
     index_a2x_Sa_v          = mct_avect_indexra(a2x,'Sa_v')
     index_a2x_Sa_tbot       = mct_avect_indexra(a2x,'Sa_tbot')
+    index_a2x_Sa_rh850      = mct_avect_indexra(a2x,'Sa_rh850')
     index_a2x_Sa_ptem       = mct_avect_indexra(a2x,'Sa_ptem')
     index_a2x_Sa_pbot       = mct_avect_indexra(a2x,'Sa_pbot')
     index_a2x_Sa_pslv       = mct_avect_indexra(a2x,'Sa_pslv')
