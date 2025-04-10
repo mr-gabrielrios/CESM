@@ -16,5 +16,5 @@ components/
 doc/build
 
 # Keep CAM modifications
-!components/cam/
-!cime/src/
+!components/cam/*.*90
+!cime/src/*.*90
