@@ -16,5 +16,12 @@ components/
 doc/build
 
 # Keep CAM modifications
-!components/cam/*.*90
-!cime/src/*.*90
+!.gitignore
+!components/
+components/*
+!components/cam/
+
+# Keep CIME modifications
+cime/*
+!cime/src/
+
